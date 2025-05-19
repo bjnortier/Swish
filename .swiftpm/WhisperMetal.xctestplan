@@ -1,0 +1,24 @@
+{
+  "configurations" : [
+    {
+      "id" : "9E30E551-9FB4-440F-B21D-F9D36BD1D634",
+      "name" : "Test Scheme Action",
+      "options" : {
+
+      }
+    }
+  ],
+  "defaultOptions" : {
+
+  },
+  "testTargets" : [
+    {
+      "target" : {
+        "containerPath" : "container:",
+        "identifier" : "WhisperMetalTests",
+        "name" : "WhisperMetalTests"
+      }
+    }
+  ],
+  "version" : 1
+}

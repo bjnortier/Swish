@@ -1,0 +1,24 @@
+{
+  "configurations" : [
+    {
+      "id" : "86E3E782-0DCC-4181-AB98-4547B556DEF2",
+      "name" : "Test Scheme Action",
+      "options" : {
+
+      }
+    }
+  ],
+  "defaultOptions" : {
+
+  },
+  "testTargets" : [
+    {
+      "target" : {
+        "containerPath" : "container:",
+        "identifier" : "SwishTests",
+        "name" : "SwishTests"
+      }
+    }
+  ],
+  "version" : 1
+}
