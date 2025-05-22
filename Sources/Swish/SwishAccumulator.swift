@@ -20,4 +20,9 @@ import SwiftUI
     public func getTranscription() -> String {
         return segments.map(\.text).joined()
     }
+
+    public func reset() {
+        self.segments = []
+        self.stopAccumulating = false
+    }
 }
