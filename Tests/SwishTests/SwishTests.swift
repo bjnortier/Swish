@@ -25,11 +25,11 @@ struct TranscriberTests {
 
     @Test func testBasicTranscription() async throws {
         try await transcriber.transcribe(samples: jfkSamples, acc: acc, beamSize: 0)
-//        #expect(
-//            acc.getTranscription().assertSimilarity(
-//                to:
-//                    " And so my fellow Americans ask not what your country can do for you, ask what you can do for your country.",
-//                atLeast: 95.0))
+        #expect(
+            acc.getTranscription().similarityPercentage(
+                to:
+                    " And so my fellow Americans ask not what your country can do for you, ask what you can do for your country.",
+                ) > 80)
     }
 
     @Test func testAragorn() async throws {
