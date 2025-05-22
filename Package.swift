@@ -14,18 +14,18 @@ let package = Package(
         .library(
             name: "Swish",
             targets: ["Swish"]
-        ),
-    ],
-    dependencies: [
-        // Dependencies declare other packages that this package depends on.
-        .package(url: "https://github.com/ggerganov/whisper.cpp", revision: "6266a9f9e56a5b925e9892acf650f3eb1245814d"),
+        )
     ],
     targets: [
         // Targets are the basic building blocks of a package, defining a module or a test suite.
         // Targets can depend on other targets in this package and products from dependencies.
         .target(
-            name: "Swish", dependencies: [.product(name: "whisper", package: "whisper.cpp")]
+            name: "Swish", dependencies: ["whisper.xcframework"]
         ),
+        .binaryTarget(
+            name: "whisper.xcframework",
+            url: "https://d1upo2befk76ei.cloudfront.net/whisper.xcframework.1.7.5.rc1.zip",
+            checksum: "92733821d24a23890c945ceb83e54b7d3e8543a7d326f0f2e74df0257f72702d"),
         .testTarget(
             name: "SwishTests",
             dependencies: ["Swish"],
@@ -37,4 +37,3 @@ let package = Package(
         ),
     ]
 )
-
