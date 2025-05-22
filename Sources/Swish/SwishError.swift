@@ -17,6 +17,7 @@ public enum SwishError: Error, Equatable, Hashable {
     case invalidBeamSize(size: Int)
     case modelNotLoaded
     case jobNotStarted
+    case transcriptionFailed
 }
 
 extension SwishError: LocalizedError {
@@ -40,6 +41,8 @@ extension SwishError: LocalizedError {
             return "Invalid beam size: \(size)"
         case .modelNotLoaded:
             return "Whisper model not loaded"
+        case .transcriptionFailed:
+            return "Transcription failed"
         }
     }
 }

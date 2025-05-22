@@ -38,4 +38,48 @@ struct SwishFullJobTests {
             ) > 80)
     }
 
+    // A job with no samples should throw
+    @MainActor
+    @Test func testFullNoSamples() async throws {
+        let job = SwishFullJob(samples: [])
+        let options = SwishJob.Options(
+            model: WhisperModel.tiny,
+            modelPath: Bundle.module.path(forResource: "ggml-tiny", ofType: "bin")!)
+
+        await #expect(throws: SwishError.emptyInputBuffer) {
+            try await job.start(options: options).value
+        }
+        #expect(job.state == .error)
+    }
+
+    // Job can run in parallel
+    @MainActor
+    @Test func testParallel() async throws {
+        let jobA = SwishFullJob(samples: jfkSamples)
+        let jobB = SwishFullJob(samples: jfkSamples)
+        let options = SwishJob.Options(
+            model: WhisperModel.tiny,
+            modelPath: Bundle.module.path(forResource: "ggml-tiny", ofType: "bin")!)
+
+        let jobATask = jobA.start(options: options)
+        let jobBTask = jobB.start(options: options)
+        try await jobATask.value
+        try await jobBTask.value
+        #expect(jobA.state == .done)
+        #expect(jobB.state == .done)
+
+        #expect(
+            jobA.acc.getTranscription().isSimilar(
+                to:
+                    " And so, my fellow Americans, ask not what your country can do for you, ask what you can do for your country.",
+                atLeast: 0.8))
+
+        #expect(
+            jobB.acc.getTranscription().isSimilar(
+                to:
+                    " And so, my fellow Americans, ask not what your country can do for you, ask what you can do for your country.",
+                atLeast: 0.8))
+
+    }
+
 }

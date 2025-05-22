@@ -101,10 +101,7 @@ extension String {
         // Calculate similarity percentage based on distance
         return (1.0 - Double(distance) / Double(maxLength)) * 100.0
     }
-}
 
-// Custom assertion for string similarity
-extension String {
     /// Asserts that the string is at least the specified percentage similar to the target string
     func isSimilar(to target: String, atLeast percentage: Double)
         -> Bool
