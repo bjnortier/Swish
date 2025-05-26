@@ -110,3 +110,16 @@ extension String {
         return actualPercentage >= percentage
     }
 }
+
+
+func toChunks(samples: [Float], chunkSize: Int) -> [[Float]] {
+    var chunks: [[Float]] = []
+    let numberOfChunks = Int(ceil(Float(samples.count) / Float(chunkSize)))
+    var remainingSamples = samples
+    for _ in 0 ..< numberOfChunks {
+        let toTake = min(chunkSize, remainingSamples.count)
+        chunks.append(Array(remainingSamples[0 ..< toTake]))
+        remainingSamples.removeFirst(toTake)
+    }
+    return chunks
+}
