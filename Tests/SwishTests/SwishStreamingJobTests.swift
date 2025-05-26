@@ -54,7 +54,7 @@ private final class ChunkedStreamingEngine: SwishStreamingEngine {
     }
 }
 
-struct Test {
+struct SwishStreamingJobTests {
 
     let aragornSamples: [Float]!
     let modelPath: String

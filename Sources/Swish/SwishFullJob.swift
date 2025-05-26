@@ -43,8 +43,7 @@ public class SwishFullJob: SwishJob {
                 let samples = try await self.getSamples()
 
                 // see createOrReuseTranscriber() for side-effects
-                let transcriber = try self.createOrReuseTranscriber(options: options)
-                try await transcriber.loadModel()
+                let transcriber = try await self.createOrReuseTranscriber(options: options)
 
                 await MainActor.run { self.setState(.busy) }
                 _ = try await transcriber.transcribe(

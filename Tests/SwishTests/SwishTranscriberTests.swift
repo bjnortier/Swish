@@ -4,7 +4,7 @@ import Testing
 @testable import Swish
 
 @Suite(.serialized)
-struct TranscriberTests {
+struct SwishTranscriberTests {
 
     let jfkSamples: [Float]!
     let aragornSamples: [Float]!

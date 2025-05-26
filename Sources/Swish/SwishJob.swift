@@ -88,32 +88,32 @@ import SwiftUI
         //        }
     }
 
-
-
     // This function has potential side-effects:
     // setting state to .loadingModel
     // setting self.options and self.transcriber
-    func createOrReuseTranscriber(options newOptions: Options) throws -> SwishTranscriber {
+    @MainActor
+    func createOrReuseTranscriber(options newOptions: Options) async throws -> SwishTranscriber {
         // When restarting, create a new transcriber if the model is different
         if let existingTranscriber = transcriber,
             let oldOptions = options
         {
             if newOptions.modelPath != oldOptions.modelPath {
-                return try createTranscriber(options: newOptions)
+                return try await createTranscriber(options: newOptions)
             } else {
                 return existingTranscriber
             }
         } else {
-            return try createTranscriber(options: newOptions)
+            return try await createTranscriber(options: newOptions)
         }
     }
 
-    private func createTranscriber(options: Options) throws -> SwishTranscriber {
+    @MainActor
+    private func createTranscriber(options: Options) async throws -> SwishTranscriber {
         setState(.loadingModel)
         let transcriber = SwishTranscriber(
             modelPath: options.modelPath
         )
-        //        try transcriber.loadModel()
+        try await transcriber.loadModel()
         self.transcriber = transcriber
         self.options = options
         return transcriber

@@ -40,9 +40,7 @@ public class SwishStreamingJob: SwishJob {
 
 
             do {
-                // see createOrReuseTranscriber() for side-effects
-                let transcriber = try self.createOrReuseTranscriber(options: options)
-                try await transcriber.loadModel()
+                let transcriber = try await self.createOrReuseTranscriber(options: options)
 
                 self.setState(.busy)
                 try self.streamingEngine.startStreaming(bufferActor: self.bufferActor)
