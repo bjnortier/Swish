@@ -10,6 +10,7 @@ import Testing
 
 @testable import Swish
 
+@Suite(.serialized)
 struct SwishFullJobTests {
 
     let jfkSamples: [Float]!

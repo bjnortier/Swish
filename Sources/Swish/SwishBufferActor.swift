@@ -7,7 +7,7 @@
 
 
 
-// The BufferActor manages receiving samples from the source (e.g. a microphone)
+// The SwishAudioBuffer manages receiving samples from the source (e.g. a microphone)
 // and exposing those samples to the client for transcription. It is a Swift actor
 // because it will be accessed from multiple treads (the source and sink).
 //

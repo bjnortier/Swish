@@ -86,47 +86,53 @@ public class SwishFullJob: SwishJob {
     }
 
     public func restart(options: SwishJob.Options) -> Task<Void, Error> {
-        Task(priority: .userInitiated) { [weak self] in
+        Task(priority: .userInitiated) { @MainActor [weak self] in
             guard let self = self else { return }
+            guard let task = self.task else {
+                throw SwishError.jobNotStarted
+            }
 
-            try await self.cancel(forRestart: true).value
-            await MainActor.run { self.acc.reset() }
+            self.setState(.restarting)
+            self.acc.stopAccumulating = true
+            task.cancel()
+            try await task.value
+
+            self.acc.reset()
             _ = self.start(options: options)
         }
     }
 
-    public func stop() -> Task<Void, Error> {
-        Task(priority: .userInitiated) { [weak self] in
-            guard let self = self else { throw SwishError.jobNotStarted }
+    public func cancel() -> Task<Void, Error> {
+        Task(priority: .userInitiated) { @MainActor [weak self] in
+            guard let self = self else { return }
             guard let task = self.task else {
                 throw SwishError.jobNotStarted
             }
-            await MainActor.run {
-                self.setState(.stopping)
-                self.acc.stopAccumulating = true
-            }
+
+            self.setState(.cancelling)
+            self.acc.stopAccumulating = true
             task.cancel()
             try await task.value
-            await MainActor.run { self.setState(.done) }
+
         }
     }
 
-    public func cancel(forRestart: Bool = false) -> Task<Void, Error> {
-        Task(priority: .userInitiated) { [weak self] in
-            guard let self = self else { throw SwishError.jobNotStarted }
+    public func stop() -> Task<Void, Error> {
+        Task(priority: .userInitiated) { @MainActor [weak self] in
+            guard let self = self else { return }
             guard let task = self.task else {
                 throw SwishError.jobNotStarted
             }
-            await MainActor.run {
-                if forRestart {
-                    self.setState(.restarting)
-                } else {
-                    self.setState(.cancelling)
-                }
-                self.acc.stopAccumulating = true
-            }
+            self.setState(.stopping)
+
+            // Stop the transcriber via the callback and wait for it to
+            // finish
+            self.acc.stopAccumulating = true
             task.cancel()
             try await task.value
+
+            self.setState(.done)
         }
+
     }
 }

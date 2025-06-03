@@ -48,4 +48,11 @@ struct SwishTranscriberTests {
 
         #expect(acc.segments.isEmpty)
     }
+
+    @Test func testSafe() async throws {
+        let safeTranscriber = SafeTranscriber(modelPath:Bundle.module.path(forResource: "ggml-tiny", ofType: "bin")!)
+        try safeTranscriber.loadModel()
+        try safeTranscriber.transcribe(samples: jfkSamples, beamSize: 0)
+        print(safeTranscriber.segments)
+    }
 }

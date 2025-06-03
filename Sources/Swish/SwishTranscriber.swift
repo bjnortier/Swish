@@ -20,7 +20,6 @@ private func newSegmentCallback(
     let nSegments = whisper_full_n_segments(whisperContext)
     var segments: [SwishSegment] = []
     for segmentIndex: Int32 in nSegments - nNew..<nSegments {
-        // Whisper.cpp times are in centiseconds, convert to milliseconds
         let segment = SwishSegment(
             t0: Int(whisper_full_get_segment_t0(whisperContext, segmentIndex)) * 10,
             t1: Int(whisper_full_get_segment_t1(whisperContext, segmentIndex)) * 10,
@@ -31,7 +30,7 @@ private func newSegmentCallback(
     }
 
     let acc = Unmanaged<SwishAccumulator>.fromOpaque(userData!).takeUnretainedValue()
-    acc.segments.append(contentsOf: segments)
+    acc.appendSegments(segments) // Use thread-safe method
 }
 
 // Check if we should stop accumulating segments

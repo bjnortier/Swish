@@ -6,7 +6,7 @@
 //
 //  A segment of text with a start and end time in milliseconds.
 
-public struct SwishSegment: Equatable, Hashable {
+public struct SwishSegment: Equatable, Hashable, Sendable {
 
     public let t0: Int
     public let t1: Int

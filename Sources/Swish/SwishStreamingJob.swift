@@ -11,7 +11,7 @@ import Foundation
 private let minSamplesSize = WhisperConstants.samplingFrequency / 10
 // The number of samples to have transcribed before moving onto the next frame
 private let frameSize = 29 * WhisperConstants.samplingFrequency
-// The number of sample to use as an overlap between frames to alleviate missed words
+// The number of samples to use as an overlap between frames to alleviate missed words
 private let overlapSize = 800
 
 @MainActor
