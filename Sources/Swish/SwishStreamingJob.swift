@@ -42,7 +42,7 @@ public class SwishStreamingJob: SwishJob {
             do {
                 let transcriber = try await self.createOrReuseTranscriber(options: options)
 
-                self.setState(.busy)
+                self.setState(.transcribing)
                 try self.streamingEngine.startStreaming(bufferActor: self.bufferActor)
 
                 while true {
@@ -73,7 +73,7 @@ public class SwishStreamingJob: SwishJob {
                         if localSegments.count > 0 {
                             self.acc.appendAtHighWaterMark(localSegments, updateMark: isFrame)
                         }
-                        // This prevents memory use rising over time but not sure why :/
+                        // Explicity yield to allow other tasks to run
                         await Task.yield()
                     } else {
                         try await Task.sleep(nanoseconds: 100_000_000)
@@ -153,7 +153,7 @@ public class SwishStreamingJob: SwishJob {
         Task(priority: .userInitiated) { [weak self] in
             guard let self = self else { return }
             try self.streamingEngine.unpauseStreaming()
-            self.setState(.busy)
+            self.setState(.transcribing)
         }
     }
 

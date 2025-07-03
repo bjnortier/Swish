@@ -22,7 +22,7 @@ struct SwishFullJobTests {
 
     @MainActor
     @Test func testFullJFK() async throws {
-        let job = SwishFullJob(samples: jfkSamples)
+        let job = SwishFileJob(samples: jfkSamples)
         let options = SwishJob.Options(
             model: WhisperModel.tiny,
             modelPath: Bundle.module.path(forResource: "ggml-tiny", ofType: "bin")!)
@@ -42,7 +42,7 @@ struct SwishFullJobTests {
     // A job with no samples should throw
     @MainActor
     @Test func testFullNoSamples() async throws {
-        let job = SwishFullJob(samples: [])
+        let job = SwishFileJob(samples: [])
         let options = SwishJob.Options(
             model: WhisperModel.tiny,
             modelPath: Bundle.module.path(forResource: "ggml-tiny", ofType: "bin")!)
@@ -56,8 +56,8 @@ struct SwishFullJobTests {
     // Job can run in parallel
     @MainActor
     @Test func testParallel() async throws {
-        let jobA = SwishFullJob(samples: jfkSamples)
-        let jobB = SwishFullJob(samples: jfkSamples)
+        let jobA = SwishFileJob(samples: jfkSamples)
+        let jobB = SwishFileJob(samples: jfkSamples)
         let options = SwishJob.Options(
             model: WhisperModel.tiny,
             modelPath: Bundle.module.path(forResource: "ggml-tiny", ofType: "bin")!)

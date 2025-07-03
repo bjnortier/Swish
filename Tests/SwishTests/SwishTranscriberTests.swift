@@ -55,4 +55,12 @@ struct SwishTranscriberTests {
         try safeTranscriber.transcribe(samples: jfkSamples, beamSize: 0)
         print(safeTranscriber.segments)
     }
+
+    @Test func testSafeStop() async throws {
+        let safeTranscriber = SafeTranscriber(modelPath:Bundle.module.path(forResource: "ggml-tiny", ofType: "bin")!)
+        try safeTranscriber.loadModel()
+        safeTranscriber.stop = true
+        try safeTranscriber.transcribe(samples: jfkSamples, beamSize: 0)
+        #expect(safeTranscriber.segments == [])
+    }
 }

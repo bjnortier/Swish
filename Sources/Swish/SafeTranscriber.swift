@@ -12,7 +12,9 @@ import whisper
 @Observable
 public class SafeTranscriber {
 
-    var segments: [SwishSegment] = []
+    public var segments: [SwishSegment] = []
+    public var stop: Bool = false
+
     private let modelPath: String
     private var whisperContext: OpaquePointer? = nil
 
@@ -50,7 +52,7 @@ public class SafeTranscriber {
             params.beam_search.beam_size = Int32(beamSize)
         }
 
-        audioLanguage.withCString { en in
+        try audioLanguage.withCString { en in
             // Parameters like call
             params.print_realtime = true
             params.print_progress = false
@@ -66,8 +68,8 @@ public class SafeTranscriber {
             params.language = en
 
             let dataContext = Unmanaged.passRetained(self).toOpaque()
-
             let unsafeUserData = UnsafeMutableRawPointer(dataContext)
+
             params.new_segment_callback = { whisperContext, whisperState, nNew, userData in
 
                 let nSegments = whisper_full_n_segments(whisperContext)
@@ -83,21 +85,29 @@ public class SafeTranscriber {
                     logger.info("segment: \(String(describing: segment), privacy: .public)")
                 }
 
-                let transcriberService = Unmanaged<SafeTranscriber>.fromOpaque(userData!)
+                let transcriber = Unmanaged<SafeTranscriber>.fromOpaque(userData!)
                     .takeUnretainedValue()
-                transcriberService.segments.append(contentsOf: segments)
+                transcriber.segments.append(contentsOf: segments)
             }
             params.new_segment_callback_user_data = unsafeUserData
-            //            params.abort_callback = abortCallback
-            //            params.abort_callback_user_data = unsafeUserData
+
+            params.abort_callback = { userData in
+                let transcriber = Unmanaged<SafeTranscriber>.fromOpaque(userData!)
+                    .takeUnretainedValue()
+                return transcriber.stop
+            }
+            params.abort_callback_user_data = unsafeUserData
+
             whisper_reset_timings(self.whisperContext)
 
-            samples.withUnsafeBufferPointer { samples in
-                if whisper_full(
+            try samples.withUnsafeBufferPointer { samples in
+                let result = whisper_full(
                     whisperContext, params, samples.baseAddress, Int32(samples.count))
-                    != 0
-                {
+
+                // Whisper will return 0 on success, non-zero on failure or when stopped explicitly.
+                if result != 0, !self.stop {
                     logger.error("Failed to run the model")
+                    throw SwishError.transcriptionFailed
                 } else {
                     whisper_print_timings(whisperContext)
                 }

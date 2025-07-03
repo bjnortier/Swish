@@ -8,8 +8,7 @@
 import Foundation
 import os
 
-@MainActor
-public class SwishFullJob: SwishJob {
+public class SwishFileJob: SwishJob {
     public typealias Preprocessor = () async throws -> [Float]
 
     private var samples: [Float]?
@@ -45,7 +44,7 @@ public class SwishFullJob: SwishJob {
                 // see createOrReuseTranscriber() for side-effects
                 let transcriber = try await self.createOrReuseTranscriber(options: options)
 
-                await MainActor.run { self.setState(.busy) }
+                self.setState(.transcribing)
                 _ = try await transcriber.transcribe(
                     samples: samples,
                     acc: self.acc,
@@ -56,19 +55,15 @@ public class SwishFullJob: SwishJob {
                     beamSize: options.beamSize
                 )
 
-                await MainActor.run {
-                    if self.state == .cancelling {
-                        self.setState(.cancelled)
-                    } else if self.state != .restarting {
-                        self.setState(.done)
-                    }
-                    self.destroyTranscriber()
+                if self.state == .cancelling {
+                    self.setState(.cancelled)
+                } else if self.state != .restarting {
+                    self.setState(.done)
                 }
+                self.destroyTranscriber()
 
             } catch {
-                await MainActor.run {
-                    self.setState(.error, error: error)
-                }
+                self.setState(.error, error: error)
                 throw error
             }
         }

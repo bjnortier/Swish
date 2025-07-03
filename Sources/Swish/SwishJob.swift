@@ -8,12 +8,13 @@
 import Combine
 import SwiftUI
 
-@Observable public class SwishJob {
+@MainActor
+@Observable public class SwishJob: Identifiable {
     public enum State: String {
         case created
         case preprocessing
         case loadingModel
-        case busy
+        case transcribing
         case paused
         case stopping
         case cancelling
@@ -21,6 +22,18 @@ import SwiftUI
         case restarting
         case done
         case error
+
+        public var isBusy: Bool {
+            switch self {
+            case .preprocessing, .loadingModel, .transcribing, .stopping, .cancelling, .restarting:
+                return true
+            default:
+                return false
+
+            }
+
+        }
+
     }
 
     public struct Options: Hashable, Equatable {
@@ -85,13 +98,11 @@ import SwiftUI
         if self.state != state {
             self.state = state
         }
-        //        }
     }
 
     // This function has potential side-effects:
     // setting state to .loadingModel
     // setting self.options and self.transcriber
-    @MainActor
     func createOrReuseTranscriber(options newOptions: Options) async throws -> SwishTranscriber {
         // When restarting, create a new transcriber if the model is different
         if let existingTranscriber = transcriber,
