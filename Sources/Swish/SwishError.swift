@@ -18,6 +18,9 @@ public enum SwishError: Error, Equatable, Hashable {
     case modelNotLoaded
     case jobNotStarted
     case transcriptionFailed
+    case zeroInputSampleRate
+    case engineNotInitialized
+    case nilOutputAudioFormat
 }
 
 extension SwishError: LocalizedError {
@@ -43,6 +46,12 @@ extension SwishError: LocalizedError {
             return "Whisper model not loaded"
         case .transcriptionFailed:
             return "Transcription failed"
+        case .zeroInputSampleRate:
+            return "Zero input sample rate for input node"
+        case .engineNotInitialized:
+            return "input node is nil, AudioEngine not initialized"
+        case .nilOutputAudioFormat:
+            return "Output audio format is nil"
         }
     }
 }

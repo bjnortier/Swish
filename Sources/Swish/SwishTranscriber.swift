@@ -26,11 +26,10 @@ private func newSegmentCallback(
             text: String(cString: whisper_full_get_segment_text(whisperContext, segmentIndex))
         )
         segments.append(segment)
-        logger.info("segment: \(String(describing: segment), privacy: .public)")
     }
 
     let acc = Unmanaged<SwishAccumulator>.fromOpaque(userData!).takeUnretainedValue()
-    acc.appendSegments(segments) // Use thread-safe method
+    acc.appendSegments(segments)  // Use thread-safe method
 }
 
 // Check if we should stop accumulating segments
@@ -75,7 +74,8 @@ public actor SwishTranscriber {
         translateToEN: Bool = false,
         tokenTimestamps: Bool = false,
         maxSegmentTokens: Int = 0,
-        beamSize: Int = 5
+        beamSize: Int = 5,
+        printTimings: Bool = false
     ) throws {
         guard let contextWrapper else {
             throw SwishError.modelNotLoaded
@@ -101,7 +101,7 @@ public actor SwishTranscriber {
 
         audioLanguage.withCString { en in
             // Parameters like call
-            params.print_realtime = true
+            params.print_realtime = false
             params.print_progress = false
             params.print_timestamps = false
             params.print_special = false
@@ -128,7 +128,9 @@ public actor SwishTranscriber {
                 {
                     logger.error("Failed to run the model")
                 } else {
-                    whisper_print_timings(contextWrapper.pointer)
+                    if printTimings {
+                        whisper_print_timings(contextWrapper.pointer)
+                    }
                 }
             }
         }

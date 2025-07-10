@@ -33,11 +33,9 @@ public class SwishStreamingJob: SwishJob {
         super.init(state: state, acc: acc)
     }
 
-
     public func start(options: SwishJob.Options) -> Task<Void, Error> {
         let task = Task(priority: .userInitiated) { [weak self] in
             guard let self = self else { return }
-
 
             do {
                 let transcriber = try await self.createOrReuseTranscriber(options: options)
@@ -57,7 +55,8 @@ public class SwishStreamingJob: SwishJob {
 
                     // Transcribe if enough samples have been received
                     if let nextSamples, self.state != .paused {
-                        let localAccumulator = SwishAccumulator(stopAccumulating: self.acc.stopAccumulating)
+                        let localAccumulator = SwishAccumulator(
+                            stopAccumulating: self.acc.stopAccumulating)
                         try await transcriber.transcribe(
                             samples: nextSamples,
                             acc: localAccumulator,
