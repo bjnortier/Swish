@@ -32,7 +32,7 @@ actor ChunkActor {
         return chunkIndex < chunks.count
     }
 
-    func startStreaming(bufferActor: SwishBufferActor) {
+    func startStreaming(bufferActor: SwishAudioBuffer) {
         task = Task {
             var nextChunk = getNextChunk()
             while nextChunk != nil {
@@ -74,7 +74,7 @@ private final class ChunkedStreamingEngine: SwishStreamingEngine {
         self.chunkActor = ChunkActor(samples: samples)
     }
 
-    func startStreaming(bufferActor: SwishBufferActor) {
+    func startStreaming(bufferActor: SwishAudioBuffer) {
         let localA = chunkActor
         Task {
             await localA.startStreaming(bufferActor: bufferActor)

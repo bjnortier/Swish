@@ -17,7 +17,7 @@ private let overlapSize = 800
 @MainActor
 public class SwishStreamingJob: SwishJob {
     var streamingEngine: SwishStreamingEngine
-    var bufferActor: SwishBufferActor
+    var bufferActor: SwishAudioBuffer
 
     public init(
         state: State = .created,
@@ -25,7 +25,7 @@ public class SwishStreamingJob: SwishJob {
         streamingEngine: SwishStreamingEngine
     ) {
         self.streamingEngine = streamingEngine
-        self.bufferActor = SwishBufferActor(
+        self.bufferActor = SwishAudioBuffer(
             minSamplesSize: minSamplesSize,
             frameSize: frameSize,
             overlapSize: overlapSize

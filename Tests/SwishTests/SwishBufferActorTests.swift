@@ -12,7 +12,7 @@ import Testing
 struct SwishBufferActorTests {
     @Test("get samples")
     func testGetSamples() async throws {
-        let buffer = SwishBufferActor(minSamplesSize: 2, frameSize: 3, overlapSize: 1)
+        let buffer = SwishAudioBuffer(minSamplesSize: 2, frameSize: 3, overlapSize: 1)
         let (samples1, isFrame1) = await buffer.getNextSamples()
         #expect(samples1 == nil)
         #expect(!isFrame1)

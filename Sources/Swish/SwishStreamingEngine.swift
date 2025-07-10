@@ -6,7 +6,7 @@
 //
 
 public protocol SwishStreamingEngine {
-    func startStreaming(bufferActor: SwishBufferActor) throws
+    func startStreaming(bufferActor: SwishAudioBuffer) throws
     func pauseStreaming() throws
     func unpauseStreaming() throws
     func stopStreaming() throws

@@ -15,7 +15,7 @@ public class SwishMicrophoneStreamingEngine: SwishStreamingEngine {
         // Do nothing, a public initializer is required
     }
 
-    public func startStreaming(bufferActor: SwishBufferActor) throws {
+    public func startStreaming(bufferActor: SwishAudioBuffer) throws {
         do {
             #if os(iOS)
                 try configureAudioSession()

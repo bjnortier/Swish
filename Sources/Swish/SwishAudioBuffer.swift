@@ -5,9 +5,13 @@
 //  Created by Ben Nortier on 2025/05/26.
 //
 
-// The SwishAudioBuffer manages receiving samples from the source (e.g. a microphone)
+// The SwishAudioBuffer manages receiving streaming samples from the source (e.g. a microphone)
 // and exposing those samples to the client for transcription. It is a Swift actor
-// because it will be accessed from multiple treads (the source and sink).
+// because it will be accessed from multiple treads.
+//
+// Whisper operates on a fram of 30 seconds of audio at a time, and when doing dictation
+// that frame should be updated with new data and re-transcribed in real time.
+//
 //
 // There is a minimum sample size, if there are not enough samples yet they will not
 // be returned.
@@ -16,7 +20,7 @@
 // The is an overlap size, which is the number of samples from the previous frame
 // that will be returned to alleviate issues with dropped words. This is a value
 // determined by empirical experimentation.
-public actor SwishBufferActor {
+public actor SwishAudioBuffer {
     private var buffer: [Float]
     private var minSamplesSize: Int
     private var frameSize: Int
@@ -78,13 +82,6 @@ public actor SwishBufferActor {
         }
 
         return (samples: samples, isFrame: isFrame)
-    }
-
-    @available(*, deprecated, message: "Is now reset()")
-    public func clear() {
-        buffer = []
-        frameFromIndex = 0
-        lastToIndex = nil
     }
 
     public func reset(clearBuffer: Bool) {
