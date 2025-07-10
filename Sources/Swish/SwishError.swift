@@ -40,7 +40,7 @@ extension SwishError: LocalizedError {
             return "WhisperJob has not been started"
         case .emptyInputBuffer:
             return "Empty input buffer"
-        case .invalidBeamSize(size: let size):
+        case .invalidBeamSize(let size):
             return "Invalid beam size: \(size)"
         case .modelNotLoaded:
             return "Whisper model not loaded"

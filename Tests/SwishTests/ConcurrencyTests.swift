@@ -35,11 +35,11 @@ actor Bar {
         self.y = 3
     }
 
-    func doSomething(segments: [Segment]) async -> Void {
+    func doSomething(segments: [Segment]) async {
         print("Doing something with \(segments.count) segments")
     }
 
-    func doSomethingWithUnSendable(_ unSendable: UnSendable) async -> Void {
+    func doSomethingWithUnSendable(_ unSendable: UnSendable) async {
         print("Doing something with UnSendable with x = \(unSendable.x)")
         unSendable.x = self.y
     }
@@ -47,14 +47,14 @@ actor Bar {
 
 struct Test {
 
-//    @Test func testSendable() async throws {
-//        let segments = [Segment(t0: 0, text: "123")]
-//        let foo = Foo(segments: segments)
-//        let bar = Bar()
-//        let us = UnSendable(x: 5)
-//        await bar.doSomething(segments: foo.segments)
-//        await bar.doSomethingWithUnSendable(us)
-//        print(us.x)
-//    }
+    //    @Test func testSendable() async throws {
+    //        let segments = [Segment(t0: 0, text: "123")]
+    //        let foo = Foo(segments: segments)
+    //        let bar = Bar()
+    //        let us = UnSendable(x: 5)
+    //        await bar.doSomething(segments: foo.segments)
+    //        await bar.doSomethingWithUnSendable(us)
+    //        print(us.x)
+    //    }
 
 }

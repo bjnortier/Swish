@@ -5,8 +5,6 @@
 //  Created by Ben Nortier on 2025/05/26.
 //
 
-
-
 // The SwishAudioBuffer manages receiving samples from the source (e.g. a microphone)
 // and exposing those samples to the client for transcription. It is a Swift actor
 // because it will be accessed from multiple treads (the source and sink).
@@ -73,7 +71,7 @@ public actor SwishBufferActor {
             }
         }
 
-        let samples = Array(buffer[from ..< to])
+        let samples = Array(buffer[from..<to])
         lastToIndex = to
         if isFrame {
             frameFromIndex = to

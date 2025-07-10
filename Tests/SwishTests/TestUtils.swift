@@ -111,14 +111,13 @@ extension String {
     }
 }
 
-
 func toChunks(samples: [Float], chunkSize: Int) -> [[Float]] {
     var chunks: [[Float]] = []
     let numberOfChunks = Int(ceil(Float(samples.count) / Float(chunkSize)))
     var remainingSamples = samples
-    for _ in 0 ..< numberOfChunks {
+    for _ in 0..<numberOfChunks {
         let toTake = min(chunkSize, remainingSamples.count)
-        chunks.append(Array(remainingSamples[0 ..< toTake]))
+        chunks.append(Array(remainingSamples[0..<toTake]))
         remainingSamples.removeFirst(toTake)
     }
     return chunks

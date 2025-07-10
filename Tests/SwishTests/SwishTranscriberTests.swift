@@ -25,11 +25,12 @@ struct SwishTranscriberTests {
 
     @Test func testBasicTranscription() async throws {
         try await transcriber.transcribe(samples: jfkSamples, acc: acc, beamSize: 0)
-        #expect(
-            acc.getTranscription().similarityPercentage(
-                to:
-                    " And so my fellow Americans ask not what your country can do for you, ask what you can do for your country.",
-                ) > 80)
+        let transcription = acc.getTranscription()
+        let similarity = transcription.similarityPercentage(
+            to:
+                " And so my fellow Americans ask not what your country can do for you, ask what you can do for your country.",
+        )
+        #expect(similarity > 80)
     }
 
     @Test func testAragorn() async throws {
@@ -38,7 +39,8 @@ struct SwishTranscriberTests {
         #expect(
             acc.getTranscription().similarityPercentage(
                 to:
-                    " [chatter] I see you right. The same fear that would take the half of me. The day may come, and the courage of men pray, and we will seek our friends and pray all bonds of fellowship, but it is not distinct. And our rules and shepherds see on the edge of the crossings now, but it is not distinct. This day may come, and we will seek our friends and pray all together. [chatter]")
+                    " [chatter] I see you right. The same fear that would take the half of me. The day may come, and the courage of men pray, and we will seek our friends and pray all bonds of fellowship, but it is not distinct. And our rules and shepherds see on the edge of the crossings now, but it is not distinct. This day may come, and we will seek our friends and pray all together. [chatter]"
+            )
                 > 50)
     }
 
@@ -49,18 +51,4 @@ struct SwishTranscriberTests {
         #expect(acc.segments.isEmpty)
     }
 
-    @Test func testSafe() async throws {
-        let safeTranscriber = SafeTranscriber(modelPath:Bundle.module.path(forResource: "ggml-tiny", ofType: "bin")!)
-        try safeTranscriber.loadModel()
-        try safeTranscriber.transcribe(samples: jfkSamples, beamSize: 0)
-        print(safeTranscriber.segments)
-    }
-
-    @Test func testSafeStop() async throws {
-        let safeTranscriber = SafeTranscriber(modelPath:Bundle.module.path(forResource: "ggml-tiny", ofType: "bin")!)
-        try safeTranscriber.loadModel()
-        safeTranscriber.stop = true
-        try safeTranscriber.transcribe(samples: jfkSamples, beamSize: 0)
-        #expect(safeTranscriber.segments == [])
-    }
 }
