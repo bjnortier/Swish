@@ -2,7 +2,7 @@
 
 ## Introduction
 
-Swish is a Swift/SwiftUI library for transcribing audio on iOS and macOS using [whisper.cpp](https://github.com/ggml-org/whisper.cpp). It can be used to transcribe audio files or transcribe audio from the microphone in real-time. 
+Swish is a Swift/SwiftUI library for transcribing audio on iOS and macOS using [whisper.cpp](https://github.com/ggml-org/whisper.cpp). It can be used to transcribe audio files or transcribe audio from the microphone in real-time.
 
 Swish adds some functionality on top of whisper.cpp:
 
@@ -16,6 +16,42 @@ Swish adds some functionality on top of whisper.cpp:
 Swish requires iOS 17.0+, iPadOS 17.0+, and macOS 14.0+.
 
 To run the tests in this repo git-lfs is required to download the test WAV files and Whisper model.
+
+### Setting up Git LFS
+
+This repository uses Git Large File Storage (Git LFS) to manage large binary files like audio samples and Whisper model files. Follow these steps to properly checkout all files:
+
+1. **Install Git LFS** (if not already installed):
+
+   ```bash
+   # macOS with Homebrew
+   brew install git-lfs
+
+   # Ubuntu/Debian
+   sudo apt install git-lfs
+
+   # Windows
+   # Download from https://git-lfs.github.io/
+   ```
+
+2. **Initialize Git LFS** in your local repository:
+
+   ```bash
+   git lfs install
+   ```
+
+3. **Pull the LFS files**:
+   ```bash
+   git lfs pull
+   ```
+
+If you've already cloned the repository without Git LFS set up, you may see placeholder files instead of the actual binary content. After installing and initializing Git LFS, run `git lfs pull` to download the actual files.
+
+**Files managed by Git LFS in this repository:**
+
+- `Tests/SwishTests/Resources/jfk.wav` - Test audio file
+- `Tests/SwishTests/Resources/aragorn.wav` - Test audio file
+- `Tests/SwishTests/Resources/ggml-tiny.bin` - Whisper model for testing
 
 ## Installation
 
@@ -36,7 +72,7 @@ Swish is built around several key components that work together to provide threa
 #### Main Components
 
 - **`SwishTranscriber`** - Actor-based wrapper around whisper.cpp for thread-safe transcription
-- **`SwishJob`** - Observable base class for managing transcription job state and lifecycle  
+- **`SwishJob`** - Observable base class for managing transcription job state and lifecycle
 - **`SwishFileJob`** - Job for transcribing pre-recorded audio files
 - **`SwishStreamingJob`** - Job for real-time streaming transcription from microphone
 - **`SwishAccumulator`** - Thread-safe accumulator for transcription segments
@@ -183,7 +219,7 @@ Represents a transcribed segment:
 ```swift
 public struct SwishSegment {
     public let t0: Int        // Start time in milliseconds * 100
-    public let t1: Int        // End time in milliseconds * 100  
+    public let t1: Int        // End time in milliseconds * 100
     public let text: String   // Transcribed text
 }
 ```
@@ -198,7 +234,7 @@ You can implement your own streaming engine by conforming to `SwishStreamingEngi
 public protocol SwishStreamingEngine {
     func startStreaming(bufferActor: SwishAudioBuffer) throws
     func pauseStreaming() throws
-    func unpauseStreaming() throws  
+    func unpauseStreaming() throws
     func stopStreaming() throws
 }
 ```
