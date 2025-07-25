@@ -12,7 +12,6 @@ import SwiftUI
 @Observable public class SwishJob: Identifiable {
     public enum State: String {
         case created
-        case preprocessing
         case loadingModel
         case transcribing
         case paused
@@ -25,7 +24,7 @@ import SwiftUI
 
         public var isBusy: Bool {
             switch self {
-            case .preprocessing, .loadingModel, .transcribing, .stopping, .cancelling, .restarting:
+            case .loadingModel, .transcribing, .stopping, .cancelling, .restarting:
                 return true
             default:
                 return false
@@ -36,52 +35,24 @@ import SwiftUI
 
     }
 
-    public struct Options: Hashable, Equatable {
-        public let model: WhisperModel
-        public let modelPath: String
-
-        // Transcriber options
-        public let audioLanguage: String
-        public let translateToEN: Bool
-        public let tokenTimestamps: Bool
-        public let maxSegmentTokens: Int
-        public let beamSize: Int
-
-        public init(
-            model: WhisperModel,
-            modelPath: String,
-            audioLanguage: String = "auto",
-            translateToEN: Bool = false,
-            tokenTimestamps: Bool = false,
-            maxSegmentTokens: Int = 0,
-            beamSize: Int = 5
-        ) {
-            self.model = model
-            self.modelPath = modelPath
-            self.audioLanguage = audioLanguage
-            self.translateToEN = translateToEN
-            self.tokenTimestamps = tokenTimestamps
-            self.maxSegmentTokens = maxSegmentTokens
-            self.beamSize = beamSize
-        }
-    }
-
-    private(set) var options: Options?
+    private(set) var modelPath: String?
+    private(set) var options: SwishTranscriber.Options?
     private(set) var transcriber: SwishTranscriber?
-    public let acc: SwishAccumulator
+    public let transcription: SwishTranscription
+    let abortController: SwishAbortController
     public private(set) var state: State
     public var error: Error?
     public var task: Task<Void, Error>?
 
-    public init(
-        state: State,
-        acc: SwishAccumulator
-    ) {
-        self.state = state
-        self.acc = acc
-        self.error = nil
-        self.options = nil
+    public init() {
+        self.state = .created
+        self.transcription = .init()
+        self.abortController = .init()
         self.transcriber = nil
+        self.error = nil
+        self.modelPath = nil
+        self.options = nil
+
     }
 
     func setState(_ state: State, error: Error? = nil) {
@@ -100,33 +71,31 @@ import SwiftUI
         }
     }
 
-    // This function has potential side-effects:
-    // setting state to .loadingModel
-    // setting self.options and self.transcriber
-    func createOrReuseTranscriber(options newOptions: Options) async throws -> SwishTranscriber {
+    func createOrReuseTranscriber(modelPath newModelPath: String) async throws -> SwishTranscriber {
         // When restarting, create a new transcriber if the model is different
         if let existingTranscriber = transcriber,
-            let oldOptions = options
+            let oldModelPath = modelPath
         {
-            if newOptions.modelPath != oldOptions.modelPath {
-                return try await createTranscriber(options: newOptions)
+            if newModelPath != oldModelPath {
+                return try await createTranscriber(modelPath: newModelPath)
+
             } else {
                 return existingTranscriber
             }
         } else {
-            return try await createTranscriber(options: newOptions)
+            return try await createTranscriber(modelPath: newModelPath)
         }
     }
 
     @MainActor
-    private func createTranscriber(options: Options) async throws -> SwishTranscriber {
+    private func createTranscriber(modelPath: String) async throws -> SwishTranscriber {
         setState(.loadingModel)
         let transcriber = SwishTranscriber(
-            modelPath: options.modelPath
+            modelPath: modelPath
         )
         try await transcriber.loadModel()
         self.transcriber = transcriber
-        self.options = options
+        self.modelPath = modelPath
         return transcriber
     }
 

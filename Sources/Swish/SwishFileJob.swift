@@ -9,60 +9,33 @@ import Foundation
 import os
 
 public class SwishFileJob: SwishJob {
-    public typealias Preprocessor = () async throws -> [Float]
 
-    private var samples: [Float]?
-    private var preprocessor: Preprocessor?
+    private var samples: [Float]
 
-    public init(
-        state: SwishJob.State = .created,
-        acc: SwishAccumulator = .init(),
-        samples: [Float]
-    ) {
+    public init(samples: [Float]) {
         self.samples = samples
-        super.init(state: state, acc: acc)
+        super.init()
     }
 
-    public init(
-        state: State = .created,
-        acc: SwishAccumulator = .init(),
-        preprocessor: @escaping Preprocessor
-    ) {
-        self.preprocessor = preprocessor
-        super.init(state: state, acc: acc)
-    }
-
-    public func start(options: SwishJob.Options) -> Task<Void, Error> {
+    public func start(modelPath: String, options: SwishTranscriber.Options = .init()) -> Task<
+        Void, Error
+    > {
         let task = Task(priority: .userInitiated) { [weak self] in
             guard let self = self else { return }
 
             do {
-
-                // Get samples using preprocessor or if set in initialiser
-                let samples = try await self.getSamples()
-
-                // see createOrReuseTranscriber() for side-effects
-                let transcriber = try await self.createOrReuseTranscriber(options: options)
+                let transcriber = try await self.createOrReuseTranscriber(modelPath: modelPath)
 
                 self.setState(.transcribing)
                 _ = try await transcriber.transcribe(
                     samples: samples,
-                    acc: self.acc,
-                    audioLanguage: options.audioLanguage,
-                    translateToEN: options.translateToEN,
-                    tokenTimestamps: options.tokenTimestamps,
-                    maxSegmentTokens: options.maxSegmentTokens,
-                    beamSize: options.beamSize
+                    transcription: self.transcription,
+                    abortController: self.abortController,
+                    options: options,
+
                 )
-
-                if self.state == .cancelling {
-                    self.setState(.cancelled)
-                } else if self.state != .restarting {
-                    self.setState(.done)
-                }
-                self.destroyTranscriber()
-
-            } catch {
+                self.setState(.done)
+        } catch {
                 self.setState(.error, error: error)
                 throw error
             }
@@ -71,16 +44,7 @@ public class SwishFileJob: SwishJob {
         return task
     }
 
-    private func getSamples() async throws -> [Float] {
-        if let preprocessor {
-            await MainActor.run { setState(.preprocessing) }
-            return try await preprocessor()
-        } else {
-            return samples!
-        }
-    }
-
-    public func restart(options: SwishJob.Options) -> Task<Void, Error> {
+    public func restart(modelPath: String, options: SwishTranscriber.Options) -> Task<Void, Error> {
         Task(priority: .userInitiated) { @MainActor [weak self] in
             guard let self = self else { return }
             guard let task = self.task else {
@@ -88,12 +52,13 @@ public class SwishFileJob: SwishJob {
             }
 
             self.setState(.restarting)
-            self.acc.stopAccumulating = true
+            self.abortController.stop()
             task.cancel()
             try await task.value
 
-            self.acc.reset()
-            _ = self.start(options: options)
+            self.transcription.reset()
+            self.abortController.reset()
+            _ = self.start(modelPath: modelPath, options: options)
         }
     }
 
@@ -105,10 +70,11 @@ public class SwishFileJob: SwishJob {
             }
 
             self.setState(.cancelling)
-            self.acc.stopAccumulating = true
+            self.abortController.stop()
             task.cancel()
             try await task.value
-
+            self.setState(.cancelled)
+            self.destroyTranscriber()
         }
     }
 
@@ -122,7 +88,7 @@ public class SwishFileJob: SwishJob {
 
             // Stop the transcriber via the callback and wait for it to
             // finish
-            self.acc.stopAccumulating = true
+            self.abortController.reset()
             task.cancel()
             try await task.value
 

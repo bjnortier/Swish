@@ -1,5 +1,5 @@
 //
-//  Test.swift
+//  SwishFullJobTests.swift
 //  Swish
 //
 //  Created by Ben Nortier on 2025/05/22.
@@ -14,26 +14,23 @@ import Testing
 struct SwishFullJobTests {
 
     let jfkSamples: [Float]!
+    let modelPath: String!
 
     init() async throws {
         jfkSamples = try readWAV(Bundle.module.url(forResource: "jfk", withExtension: "wav")!)
             .toFloatArray()
+        modelPath = Bundle.module.path(forResource: "ggml-tiny", ofType: "bin")!
     }
 
     @MainActor
     @Test func testFullJFK() async throws {
         let job = SwishFileJob(samples: jfkSamples)
-        let options = SwishJob.Options(
-            model: WhisperModel.tiny,
-            modelPath: Bundle.module.path(forResource: "ggml-tiny", ofType: "bin")!)
+        let task = job.start(modelPath: modelPath)
+        try await task.value
 
-        try await job.start(options: options).value
-        try await job.task!.value
-        try await Task.sleep(for: .seconds(0.2))  // State is set on main thread
         #expect(job.state == .done)
-
         #expect(
-            job.acc.getTranscription().similarityPercentage(
+            job.transcription.getText().similarityPercentage(
                 to:
                     " And so, my fellow Americans, ask not what your country can do for you, ask what you can do for your country."
             ) > 80)
@@ -43,12 +40,9 @@ struct SwishFullJobTests {
     @MainActor
     @Test func testFullNoSamples() async throws {
         let job = SwishFileJob(samples: [])
-        let options = SwishJob.Options(
-            model: WhisperModel.tiny,
-            modelPath: Bundle.module.path(forResource: "ggml-tiny", ofType: "bin")!)
 
         await #expect(throws: SwishError.emptyInputBuffer) {
-            try await job.start(options: options).value
+            try await job.start(modelPath: modelPath).value
         }
         #expect(job.state == .error)
     }
@@ -58,25 +52,22 @@ struct SwishFullJobTests {
     @Test func testParallel() async throws {
         let jobA = SwishFileJob(samples: jfkSamples)
         let jobB = SwishFileJob(samples: jfkSamples)
-        let options = SwishJob.Options(
-            model: WhisperModel.tiny,
-            modelPath: Bundle.module.path(forResource: "ggml-tiny", ofType: "bin")!)
 
-        let jobATask = jobA.start(options: options)
-        let jobBTask = jobB.start(options: options)
+        let jobATask = jobA.start(modelPath: modelPath)
+        let jobBTask = jobB.start(modelPath: modelPath)
         try await jobATask.value
         try await jobBTask.value
         #expect(jobA.state == .done)
         #expect(jobB.state == .done)
 
         #expect(
-            jobA.acc.getTranscription().isSimilar(
+            jobA.transcription.getText().isSimilar(
                 to:
                     " And so, my fellow Americans, ask not what your country can do for you, ask what you can do for your country.",
                 atLeast: 0.8))
 
         #expect(
-            jobB.acc.getTranscription().isSimilar(
+            jobB.transcription.getText().isSimilar(
                 to:
                     " And so, my fellow Americans, ask not what your country can do for you, ask what you can do for your country.",
                 atLeast: 0.8))

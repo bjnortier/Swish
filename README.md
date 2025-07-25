@@ -11,6 +11,8 @@ Swish adds some functionality on top of whisper.cpp:
 3. Adds Observability for rendering transcription results in real time.
 4. Adds live transcription from the microphone from SwiftUI (including audio conversion to the required format).
 
+The Demo App [SwishDemo](https://github.com/bjnortier/SwishDemo) is a good place to start when incorporating Swish into your app.
+
 ## Requirements
 
 Swish requires iOS 17.0+, iPadOS 17.0+, and macOS 14.0+.
@@ -53,6 +55,10 @@ If you've already cloned the repository without Git LFS set up, you may see plac
 - `Tests/SwishTests/Resources/aragorn.wav` - Test audio file
 - `Tests/SwishTests/Resources/ggml-tiny.bin` - Whisper model for testing
 
+## Whisper.cpp models
+
+The other whisper.cpp model files can be downloaded from [HuggingFace](https://huggingface.co/ggerganov/whisper.cpp/tree/main).
+
 ## Installation
 
 Add Swish to your project using Swift Package Manager:
@@ -71,13 +77,9 @@ Swish is built around several key components that work together to provide threa
 
 #### Main Components
 
-- **`SwishTranscriber`** - Actor-based wrapper around whisper.cpp for thread-safe transcription
-- **`SwishJob`** - Observable base class for managing transcription job state and lifecycle
 - **`SwishFileJob`** - Job for transcribing pre-recorded audio files
 - **`SwishStreamingJob`** - Job for real-time streaming transcription from microphone
 - **`SwishAccumulator`** - Thread-safe accumulator for transcription segments
-- **`SwishAudioBuffer`** - Actor for managing audio sample buffers during streaming
-- **`SwishStreamingEngine`** - Protocol for audio streaming engines (microphone, etc.)
 
 ### Basic Usage
 
@@ -92,7 +94,6 @@ let job = SwishFileJob(samples: samples)
 
 // Configure transcription options
 let options = SwishJob.Options(
-    model: .tiny,
     modelPath: "/path/to/model.bin",
     audioLanguage: "en",
     translateToEN: false
@@ -103,6 +104,9 @@ let task = job.start(options: options)
 
 // Observe results in real-time
 Text(job.acc.getTranscription())
+
+// Wait for job to finish
+try await task.value
 ```
 
 #### Real-time Microphone Transcription
@@ -116,7 +120,6 @@ let job = SwishStreamingJob(streamingEngine: engine)
 
 // Configure options
 let options = SwishJob.Options(
-    model: .tiny,
     modelPath: "/path/to/model.bin"
 )
 
@@ -125,6 +128,9 @@ let task = job.start(options: options)
 
 // Display results
 Text(job.acc.getTranscription())
+
+// Stop the streaming transctipion
+try await job.stop().value
 ```
 
 ### API Reference

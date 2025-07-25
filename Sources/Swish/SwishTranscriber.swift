@@ -28,17 +28,42 @@ private func newSegmentCallback(
         segments.append(segment)
     }
 
-    let acc = Unmanaged<SwishAccumulator>.fromOpaque(userData!).takeUnretainedValue()
-    acc.appendSegments(segments)  // Use thread-safe method
+    let transcription = Unmanaged<SwishTranscription>.fromOpaque(userData!).takeUnretainedValue()
+    transcription.appendSegments(segments)  // Use thread-safe method
 }
 
 // Check if we should stop accumulating segments
 private func abortCallback(userData: UnsafeMutableRawPointer?) -> Bool {
-    let acc = Unmanaged<SwishAccumulator>.fromOpaque(userData!).takeUnretainedValue()
-    return acc.stopAccumulating
+    let controller = Unmanaged<SwishAbortController>.fromOpaque(userData!).takeUnretainedValue()
+    return controller.stop_requested
 }
 
 public actor SwishTranscriber {
+
+    public struct Options: Hashable, Equatable {
+        // Transcriber options
+        public let audioLanguage: String
+        public let translateToEN: Bool
+        public let tokenTimestamps: Bool
+        public let maxSegmentTokens: Int
+        public let beamSize: Int
+
+        public init(
+            audioLanguage: String = "auto",
+            translateToEN: Bool = false,
+            tokenTimestamps: Bool = false,
+            maxSegmentTokens: Int = 0,
+            beamSize: Int = 5
+        ) {
+            self.audioLanguage = audioLanguage
+            self.translateToEN = translateToEN
+            self.tokenTimestamps = tokenTimestamps
+            self.maxSegmentTokens = maxSegmentTokens
+            self.beamSize = beamSize
+
+        }
+    }
+
     private var contextWrapper: ContextWrapper?
     private let modelPath: String
 
@@ -69,12 +94,9 @@ public actor SwishTranscriber {
 
     public func transcribe(
         samples: [Float],
-        acc: SwishAccumulator,
-        audioLanguage: String = "auto",
-        translateToEN: Bool = false,
-        tokenTimestamps: Bool = false,
-        maxSegmentTokens: Int = 0,
-        beamSize: Int = 5,
+        transcription: SwishTranscription,
+        abortController: SwishAbortController,
+        options: Options,
         printTimings: Bool = false
     ) throws {
         guard let contextWrapper else {
@@ -83,8 +105,8 @@ public actor SwishTranscriber {
         guard samples.count > 0 else {
             throw SwishError.emptyInputBuffer
         }
-        guard beamSize >= 0, beamSize <= 8 else {
-            throw SwishError.invalidBeamSize(size: beamSize)
+        guard options.beamSize >= 0, options.beamSize <= 8 else {
+            throw SwishError.invalidBeamSize(size: options.beamSize)
         }
 
         // Leave 2 processors free (i.e. the high-efficiency cores).
@@ -92,33 +114,36 @@ public actor SwishTranscriber {
 
         // Set up sampling parameters
         var params =
-            beamSize == 0
+            options.beamSize == 0
             ? whisper_full_default_params(WHISPER_SAMPLING_GREEDY)
             : whisper_full_default_params(WHISPER_SAMPLING_BEAM_SEARCH)
-        if beamSize > 0 {
-            params.beam_search.beam_size = Int32(beamSize)
+        if options.beamSize > 0 {
+            params.beam_search.beam_size = Int32(options.beamSize)
         }
 
-        audioLanguage.withCString { en in
+        options.audioLanguage.withCString { en in
             // Parameters like call
             params.print_realtime = false
             params.print_progress = false
             params.print_timestamps = false
             params.print_special = false
-            params.translate = translateToEN
+            params.translate = options.translateToEN
             params.n_threads = Int32(maxThreads)
             params.offset_ms = 0
             params.no_context = true
             params.single_segment = false
-            params.token_timestamps = tokenTimestamps
-            params.max_len = Int32(maxSegmentTokens)
+            params.token_timestamps = options.tokenTimestamps
+            params.max_len = Int32(options.maxSegmentTokens)
             params.language = en
 
-            let unsafeUserData = UnsafeMutableRawPointer(Unmanaged.passUnretained(acc).toOpaque())
+            let unsafeTranscription = UnsafeMutableRawPointer(
+                Unmanaged.passUnretained(transcription).toOpaque())
+            let unsafeAbortController = UnsafeMutableRawPointer(
+                Unmanaged.passUnretained(abortController).toOpaque())
             params.new_segment_callback = newSegmentCallback
-            params.new_segment_callback_user_data = unsafeUserData
+            params.new_segment_callback_user_data = unsafeTranscription
             params.abort_callback = abortCallback
-            params.abort_callback_user_data = unsafeUserData
+            params.abort_callback_user_data = unsafeAbortController
             whisper_reset_timings(contextWrapper.pointer)
 
             samples.withUnsafeBufferPointer { samples in

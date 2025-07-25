@@ -12,17 +12,16 @@ import SwiftUI
 // segments of transcribed text in a thread-safe manner. It uses a concurrent queue to
 // ensure that access to its properties is thread-safe, allowing for safe updates from
 // multiple threads, such as during streaming transcription processes.
-@Observable public final class SwishAccumulator: @unchecked Sendable {
+@Observable public final class SwishTranscription: @unchecked Sendable {
     // Private backing storage
     private var _segments: [SwishSegment] = []
-    private var _stopAccumulating: Bool = false
     private var _highWaterIndex: Int = 0
 
     var refreshID = UUID()
 
     // Concurrent queue for thread-safe access
     private let queue = DispatchQueue(
-        label: "com.bjnortier.Swish.AccumulatorQueue", attributes: .concurrent)
+        label: "com.bjnortier.Swish.TranscriptionQueue", attributes: .concurrent)
 
     // Thread-safe property access
     public var segments: [SwishSegment] {
@@ -35,25 +34,16 @@ import SwiftUI
         }
     }
 
-    // Thread-safe property access
-    public var stopAccumulating: Bool {
-        get { queue.sync { _stopAccumulating } }
-        set { queue.async(flags: .barrier) { self._stopAccumulating = newValue } }
-    }
 
-    public init(stopAccumulating: Bool = false) {
-        self._stopAccumulating = stopAccumulating
-    }
 
     // Get the accumulated transcrtiption as a single string
-    public func getTranscription() -> String {
+    public func getText() -> String {
         return queue.sync { _segments.map(\.text).joined() }
     }
 
     public func reset() {
         queue.async(flags: .barrier) {
             self._segments = []
-            self._stopAccumulating = false
             self._highWaterIndex = 0
         }
     }
