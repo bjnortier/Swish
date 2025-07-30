@@ -62,6 +62,21 @@ public class HTStreamingJob: HTJob {
         self.setState(.done)
     }
 
+    // Cancel immediately instead of transcribing the remaining samples
+    public func cancel() async throws {
+        guard let task = self.task else {
+            throw HTError.jobNotStarted
+        }
+        try self.streamingEngine.stopStreaming()
+
+        self.setState(.cancelling)
+        self.abortController.stop()
+        task.cancel()
+        try await task.value
+
+        self.setState(.done)
+    }
+
     public func restart(
         modelPath: String,
         options: HTTranscriber.Options = .init()

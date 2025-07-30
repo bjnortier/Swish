@@ -24,7 +24,7 @@ public class HTJob: Identifiable {
 
         public var isBusy: Bool {
             switch self {
-            case .loadingModel, .transcribing, .stopping, .restarting:
+            case .loadingModel, .transcribing, .stopping, .restarting, .paused:
                 return true
             default:
                 return false

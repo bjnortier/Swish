@@ -34,7 +34,10 @@ import SwiftUI
         }
     }
 
-
+    public init() {
+        self._segments = []
+        self._highWaterIndex = 0
+    }
 
     // Get the accumulated transcrtiption as a single string
     public func getText() -> String {
