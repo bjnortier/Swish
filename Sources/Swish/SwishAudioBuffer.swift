@@ -84,10 +84,12 @@ public actor SwishAudioBuffer {
         return (samples: samples, isFrame: isFrame)
     }
 
-    public func reset(clearBuffer: Bool) {
-        if clearBuffer {
-            buffer = []
-        }
+    public func clear() {
+        buffer = []
+        self.reset()
+    }
+
+    public func reset() {
         frameFromIndex = 0
         lastToIndex = nil
     }

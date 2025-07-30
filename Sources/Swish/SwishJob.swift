@@ -9,7 +9,8 @@ import Combine
 import SwiftUI
 
 @MainActor
-@Observable public class SwishJob: Identifiable {
+@Observable
+public class SwishJob: Identifiable {
     public enum State: String {
         case created
         case loadingModel
@@ -59,6 +60,7 @@ import SwiftUI
         precondition(
             state != .error || error != nil,
             "Error can only be set when state is .error and must not be nil")
+        
         //        DispatchQueue.main.async {
         // Avoid unnecessary notifications
         if self.error == nil, error != nil {

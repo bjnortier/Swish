@@ -47,6 +47,32 @@ struct SwishFullJobTests {
         #expect(job.state == .error)
     }
 
+    @MainActor
+    @Test func testStop() async throws {
+        let job = SwishFileJob(samples:jfkSamples)
+
+        _ = job.start(modelPath: modelPath)
+        try await job.stop()
+
+        #expect(job.state == .done)
+    }
+
+    @MainActor
+    @Test func testRestart() async throws {
+        let job = SwishFileJob(samples:jfkSamples)
+
+        _ = job.start(modelPath: modelPath)
+        _ = try await job.restart(modelPath: modelPath)
+        try await job.restart(modelPath: modelPath).value
+
+        #expect(job.state == .done)
+        #expect(
+            job.transcription.getText().similarityPercentage(
+                to:
+                    " And so, my fellow Americans, ask not what your country can do for you, ask what you can do for your country."
+            ) > 80)
+    }
+
     // Job can run in parallel
     @MainActor
     @Test func testParallel() async throws {

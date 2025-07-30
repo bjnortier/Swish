@@ -40,7 +40,7 @@ private func abortCallback(userData: UnsafeMutableRawPointer?) -> Bool {
 
 public actor SwishTranscriber {
 
-    public struct Options: Hashable, Equatable {
+    public struct Options: Hashable, Equatable, Sendable {
         // Transcriber options
         public let audioLanguage: String
         public let translateToEN: Bool
